@@ -57,6 +57,8 @@ describe("Market", function () {
 
     expect((await market.NFTs(0))[3]).to.equal(true);
     expect((await market.NFTs(1))[3]).to.equal(true);
+    expect((await market.getListNFTsOrderNumber()).length).to.equal(2);
+    expect(await market.getListLength()).to.equal(2);
   })
 
   it('account1 can unlist one nft from market', async function() {
@@ -77,6 +79,7 @@ describe("Market", function () {
     await market.connect(account1).unlist_nft_from_market(1)
 
     expect((await market.NFTs(1))[3]).to.equal(false);
+    expect(await market.getListLength()).to.equal(1);
   })
 
   it('account1 can change price of nft from market', async function() {
@@ -93,6 +96,8 @@ describe("Market", function () {
     )
     await market.connect(account1).change_nft_price(1, 123456789)
     
+    expect(await myNft.ownerOf(0)).to.equal(account1.address);
+    expect(await myNft.ownerOf(1)).to.equal(account1.address);
     expect((await market.NFTs(1))[2]).to.equal(123456789);
   })
 
@@ -108,8 +113,11 @@ describe("Market", function () {
       1,
       price
     )
+
+    expect(await market.getListLength()).to.equal(2);
     await market.connect(account2).buy_nft(1, { value: ethers.parseUnits('500000000000000', 'wei') })
 
     expect(await myNft.ownerOf(1)).to.equal(account2.address);
+    expect(await market.getListLength()).to.equal(1);
   })
 })

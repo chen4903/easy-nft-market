@@ -21,6 +21,11 @@ contract Market {
     uint256 public order_id;
     mapping(uint256 => NFT) public NFTs; 
 
+    event ListNFT(IERC721 _nft, uint256 _token_id, uint256 _price);
+    event unListNFT(IERC721 _nft, uint256 _token_id);
+    event ChangePrice(IERC721 _nft, uint256 _token_id, uint256 _price);
+    event BuyNFT(IERC721 _nft, uint256 _token_id, uint256 _price);
+
     constructor(IERC20 _erc20, IERC721 _erc721) {
         erc20 = _erc20;
         erc721 = _erc721;
@@ -47,6 +52,7 @@ contract Market {
 
         order_id++;
 
+        emit ListNFT(_nft, _token_id, _price);
     }
 
     function unlist_nft_from_market(uint256 _order_id) external {
@@ -55,6 +61,8 @@ contract Market {
             "u r not the owner of the nft"
         );
         NFTs[_order_id].isList = false;
+
+        emit unListNFT(NFTs[_order_id].nft_address, NFTs[_order_id].token_id);
     }
 
     function change_nft_price(uint256 _order_id, uint256 _price) external {
@@ -63,6 +71,8 @@ contract Market {
             "u r not the owner of the nft"
         );
         NFTs[_order_id].price = _price;
+
+        emit ChangePrice(NFTs[_order_id].nft_address, _order_id, _price);
     }
 
     function buy_nft(uint256 _order_id) external payable{
@@ -74,6 +84,43 @@ contract Market {
         payable(owner).transfer(NFTs[_order_id].price);
 
         NFTs[_order_id].isBought = true;
+        NFTs[_order_id].isList = false;
+
+        emit BuyNFT(NFTs[_order_id].nft_address, _order_id, NFTs[_order_id].price);
+    }
+
+    function getListNFTsOrderNumber() public view returns(uint256[] memory){
+        uint256 count = 0; // how many nfts that on list
+        uint256 i = 0;
+        while(true){
+            if(address(NFTs[i].nft_address) == address(0)){
+                break;
+            }
+            if(NFTs[i].isList == true){
+                count++;
+            }
+            i++;
+        }
+
+        i = 0;
+        uint256 index = 0;
+        uint256[] memory allListNFTs = new uint256[](count);
+        while(true){
+            if(address(NFTs[i].nft_address) == address(0)){
+                break;
+            }
+            if(NFTs[i].isList == true){
+                allListNFTs[index] = i;
+                index++;
+            }
+            i++;
+        }
+
+        return allListNFTs;
+    }
+
+    function getListLength() public view returns(uint256) {
+        return getListNFTsOrderNumber().length;
     }
 
     receive() external payable{}
